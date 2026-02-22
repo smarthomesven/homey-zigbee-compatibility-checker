@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="_homey.css">
+  <title>Homey ZigBee compatibility checker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 48px 56px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    .imgcontainer {
+      background-color: #ffffff;
+      border-radius: 9px;
+      padding: 20px 60px;
+      width: 100%;
+      max-width: 100px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .row-vertical {
+      display: vertical;
+      align-items: vertical;
+      gap: 0rem;
+    }
+
+    .dot {
+      height: 90px;
+      width: 90px;
+      background-color: #ff0000;
+      border-radius: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="fields">
+      <img src="https://icons-cdn.athom.com/3d595d1af5f6652532c19a172852142a.svg" width="60" height="60" style="filter: brightness(0) saturate(100%) invert(12%) sepia(100%) saturate(7500%) hue-rotate(0deg);">
+      <h1 class="homey-title">ZigBee compatbility checker</h1>
+      <p>With this tool, you can check if a ZigBee device is supported by Homey based on its Manufacturer Name and Product ID. This checker only checks apps published in the Homey App Store (no test apps/versions included). Specify your Homey model and the ZigBee information to get the results.</p>
+      <form class="homey-form">
+          <fieldset class="homey-form-fieldset">
+            <label class="homey-form-label" for="homeyModel">Homey Model</label>
+            <select class="homey-form-select" id="homeyModel" name="homeyModel" required>
+              <option value="" hidden>Select your Homey model</option>
+              <option value="homey-cloud">Homey Cloud</option>
+              <option value="homey-v1">Homey Pro 2016-2019</option>
+              <option value="homey-v2">Homey Pro 2023-2026</option>
+              <option value="homey-v2">Homey Pro mini</option>
+              <option value="homey-v2">Homey Self-Hosted Server</option>
+            </select>
+          </fieldset>
+          <fieldset class="homey-form-fieldset">
+            <label class="homey-form-label" for="manufacturerName">ZigBee Manufacturer Name</label>
+            <input class="homey-form-input" type="text" id="manufacturerName" name="manufacturerName" placeholder="e.g. Signify Netherlands B.V." required>
+          </fieldset>
+          <fieldset class="homey-form-fieldset">
+            <label class="homey-form-label" for="productId">ZigBee Product ID</label>
+            <input class="homey-form-input" type="text" id="productId" name="productId" placeholder="e.g. LWA001" required>
+          </fieldset>
+          <br>
+      </form>
+        <button class="homey-button-primary-full" id="save">Check Compatibility</button>
+    </div>
+    <div id="device-supported" style="display: none;">
+        <h1 class="homey-title">Your device is supported!</h1>
+        <br>
+          <div class="container" style="padding: 20px;">
+            <div class="row">
+              <div class="dot" id="dot">
+                  <img id="icon" src="https://icons-cdn.athom.com/3d595d1af5f6652532c19a172852142a.svg" width="60" height="60" style=" filter: brightness(0) invert(1);">
+              </div>
+              <div class="row-vertical" style="text-align: left;">
+              <h1 class="homey-title" id="appName">App</h1>
+              <p class="homey-subtitle" id="devName">Developer</p>
+              <button class="homey-button-primary-shadow" id="installButton">Install</button>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div class="container" style="padding: 20px;">
+            <div class="row">
+              <div class="imgcontainer" style="text-align: center;">
+                  <img id="image" src="https://apps.homeycdn.net/app/com.espressif/2/79fc63a9-f59e-4fc0-98c2-e52f46ac4c8e/drivers/zigbee_range_extender/assets/images/large.png" width="85" height="85">
+              </div>
+              <div class="row-vertical" style="text-align: left;">
+              <h1 class="homey-title" id="driverName">Driver</h1>
+              </div>
+            </div>
+          </div>
+          <br>
+          <button class="homey-button-secondary-shadow-full" id="checkAgainButton" onclick="checkAgain();">Check another device</button>
+    </div>
+    <div id="device-not-supported" style="display: none;">
+        <h1 class="homey-title">Your device is not supported yet!</h1>
+        <p>We couldn't find a compatible app for your device.</p>
+        <p>However, you can request the device using the button below.</p>
+        <button class="homey-button-primary-full" id="requestAppButton" onclick="window.open('https://request-a-brand.homey.app/boards/request-a-brand', '_blank');">Request an app</button>
+        <br>
+        <button style="display: none;" class="homey-button-primary-full" id="requestCommunityAppButton" onclick="window.open('https://community.homey.app/t/requests-homey-pro-community-app-requests/2713?u=smarthomesven', '_blank');">Request a community app</button>
+        <br>
+        <button class="homey-button-secondary-shadow-full" id="checkAgainButton" onclick="checkAgain();">Check another device</button>
+    </div>
+      <script>
+        const saveButton = document.getElementById('save');
+        const appText = document.getElementById('appName');
+        const devText = document.getElementById('devName');
+        const driverText = document.getElementById('driverName');
+        const formDiv = document.getElementById('fields');
+        const iconDiv = document.getElementById('icon');
+        const imageDiv = document.getElementById('image');
+        const dotDiv = document.getElementById('dot');
+        const supportedDiv = document.getElementById('device-supported');
+        const notSupportedDiv = document.getElementById('device-not-supported');
+        const requestAppButton = document.getElementById('requestAppButton');
+        const requestCommunityAppButton = document.getElementById('requestCommunityAppButton');
+        let url;
+        //formDiv.style.display = 'none';
+        supportedDiv.style.display = 'none';
+        async function setCheck() {
+            saveButton.classList.remove("is-loading");
+            saveButton.innerText = 'Check compatibility';
+        }
+        async function setChecking() {
+            saveButton.classList.add("is-loading");
+            saveButton.innerText = 'Checking';
+        }
+        async function checkAgain() {
+            supportedDiv.style.display = 'none';
+            notSupportedDiv.style.display = 'none';
+            formDiv.style.display = 'block';
+            document.getElementById('manufacturerName').value = '';
+            document.getElementById('productId').value = '';
+            setCheck();
+        }
+        installButton.addEventListener('click', () => {
+          window.open(url, '_blank');
+        });
+        saveButton.addEventListener('click',async () => {
+            setChecking();
+            const homeyModel = document.getElementById('homeyModel').value;
+            const manufacturerName = document.getElementById('manufacturerName').value.trim();
+            const productId = document.getElementById('productId').value.trim();
+            let homeyPlatform = '';
+            let homeyMininumSdkVersion = '';
+            let homeyVersion;
+            switch (homeyModel) {
+              case 'homey-cloud':
+                  // TODO: laatste FW versie ophalen van ota-api.homeycloud.net
+                  homeyPlatform = 'cloud';
+                  homeyMininumSdkVersion = '3';
+                  homeyVersion = '12.9.6';
+                  break;
+              case 'homey-v1':
+                  // TODO: laatste FW versie ophalen van firmware.athom.com
+                  homeyPlatform = 'local';
+                  homeyMininumSdkVersion = '2';
+                  homeyVersion = '12.11.0';
+                  break;
+              case 'homey-v2':
+                  // TODO: laatste FW versie ophalen van ota-api.homeypro.net
+                  homeyPlatform = 'local';
+                  homeyMininumSdkVersion = '3';
+                  homeyVersion = '12.12.0';
+                  break;
+              default:
+                  setCheck();
+                  alert('Please select a valid Homey model.');
+                  return;
+            }
+    
+            if (!homeyModel || !manufacturerName || !productId) {
+                setCheck();
+                alert('Please fill in all fields.');
+                return;
+            }
+    
+            const response = await fetch('https://apps-api.athom.com/api/v1/app/search-zigbee-driver?language=en', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    homeyPlatform,
+                    homeyMininumSdkVersion,
+                    manufacturerName,
+                    homeyVersion,
+                    productId
+                })
+            }).catch((error) => {
+                setCheck();
+                console.error('Error:', error);
+                alert('An error occurred while checking compatibility. Please try again later.');
+            });
+            const json = await response.json();
+            if (json.error === "app_not_found") {
+              formDiv.style.display = 'none';
+              notSupportedDiv.style.display = 'block';
+              if (homeyPlatform === "local") {
+                requestAppButton.innerText = "Request an official app";
+                requestCommunityAppButton.style.display = 'block';
+              }
+              return;
+            }
+            console.log('Homey Model:', homeyModel);
+            console.log('Manufacturer Name:', manufacturerName);
+            console.log('Product ID:', productId);
+            setCheck();
+            formDiv.style.display = 'none';
+            appText.innerText = json.app.name;
+            devText.innerText = json.app.author.name;
+            iconDiv.src = json.app.icon;
+            dotDiv.style.backgroundColor = json.app.brandColor;
+            imageDiv.src = json.driver.images.large;
+            driverText.innerText = json.driver.name;
+            url = `https://homey.app/a/${json.app.id}`;
+            supportedDiv.style.display = 'block';
+        });
+      </script>
+  </div>
+</body>
+</html>
