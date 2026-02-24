@@ -227,7 +227,7 @@
                 alert('An error occurred while checking compatibility. Please try again later.');
             });
             const json = await response.json();
-            if (json.error === "app_not_found") {
+            if (json.error === "app_not_found" || json.error === "driver_not_found") {
               formDiv.style.display = 'none';
               notSupportedDiv.style.display = 'block';
               if (homeyPlatform === "local") {
