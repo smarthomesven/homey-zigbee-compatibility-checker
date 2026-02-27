@@ -160,6 +160,8 @@
             saveButton.innerText = 'Checking';
         }
         async function checkAgain() {
+            requestCommunityAppButton.style.display = 'none';
+            requestAppButton.innerText = "Request an app";
             supportedDiv.style.display = 'none';
             notSupportedDiv.style.display = 'none';
             formDiv.style.display = 'block';
